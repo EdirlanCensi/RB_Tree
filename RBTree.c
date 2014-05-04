@@ -3,20 +3,96 @@
 #define BLACK 1
 #define RED 0
 
+typedef int tipo_chave;
+typedef char tipo_cor;
+
 typedef struct nodo{
-  int chave;
-  char cor;
+  tipo_chave chave;
+  tipo_cor cor;
   struct nodo *esq, *dir,*pai;
 } nodo;
 
-typedef struct BsTree{
+typedef struct RBTree{
 	struct nodo *raiz;
 	struct nodo *nil;
-}BsTree;
+}RBTree;
 
-nodo *Consulta(nodo *p , int k){
+nodo *Consulta(RBTree *t, nodo *p , int k);
+void ImprimaOrdenado(RBTree *t,nodo *p);
+nodo *Minimo(RBTree *t, nodo *p);
+nodo *Maximo(RBTree *t,nodo *p);
+void RotEsq(RBTree *t, nodo *p);
+void RotDir(RBTree *t, nodo *p);
+void Insira(RBTree *t,int k);
+void conserte_insercao(RBTree *t,nodo *p);
+void Transplante(RBTree *t,nodo *p, nodo *q);
+void Delete( RBTree *t, nodo *p);
+ void conserte_delecao(RBTree *t, nodo *x);
+ nodo* SUCESSOR(RBTree *t,nodo *x);
+ nodo* ANTECESSOR(RBTree *t,nodo *x);
+ int altura(RBTree *t,nodo *p);
+int nodos(RBTree *t, nodo *p);
+int    balanceada(RBTree *t, nodo *p);
 
-	while( p != NULL && k != p->chave){
+int nivelChave(RBTree *t, nodo *p, int k, int nivel){
+    int result;
+
+    if(p == t->nil){
+        return -1;
+    }else if(p->chave == k ){
+        return nivel;
+    }else{
+        result = nivelChave(t,p->esq,k,nivel+1);
+        if( result >=0 )
+            return result;
+        else
+            return nivelChave(t,p->dir,k, nivel+1);
+
+    }
+}
+
+int altura(RBTree *t,nodo *p){
+    if(p == t->nil)
+        return 0;
+
+    int altE =  altura(t,p->esq);
+    int altD = altura(t,p->dir);
+
+    if(altE > altD)
+        return altE + 1;
+
+    return (altD + 1);
+}
+
+int    balanceada(RBTree *t, nodo *p){
+    if (p == t->nil){
+        return 1;
+    }else if (p->esq == t->nil && p->dir== t->nil){ /* r não tem filhos */
+        return 1;
+    }else if(p->esq != t->nil && p->dir != t->nil){ /* r tem ambas subárvores não-nulas */
+        if ( balanceada(t, p->esq) && balanceada(t, p->dir) ){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else if(p->esq != t->nil){/* tem um único filho –`a esquerda */
+        if( altura(t, p->esq) == 1 ){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else{ /* tem um único filho –`a direita */
+        if( altura(t, p->esq) == 1){
+            return 1 ;
+        }else{
+            return 0;
+        }
+    }
+}
+
+nodo *Consulta(RBTree *t, nodo *p , int k){
+
+	while( p != t->nil && k != p->chave){
         if(k < p->chave )
             p = p->esq;
         else
@@ -26,29 +102,29 @@ nodo *Consulta(nodo *p , int k){
 
 }
 
-void ImprimaOrdenado(nodo *p){
-	if( p!= NULL){
-		ImprimaOrdenado(p->esq);
+void ImprimaOrdenado(RBTree *t,nodo *p){
+	if( p != t->nil){
+		ImprimaOrdenado(t,p->esq);
 		printf("%d ",p->chave);
-		ImprimaOrdenado(p->dir);
+		ImprimaOrdenado(t,p->dir);
 	}
 }
 
-nodo *Minimo(nodo *p){
-	while (p->esq != NULL){
+nodo *Minimo(RBTree *t, nodo *p){
+	while (p->esq != t->nil){
 		p = p->esq;
 	}
 	return p;
 }
 
-nodo *Maximo(nodo *p){
-	while( p->dir != NULL){
+nodo *Maximo(RBTree *t,nodo *p){
+	while( p->dir != t->nil){
         p = p->dir;
 	}
     return p;
 }
 
-void RotEsq(BsTree *t, nodo *p){
+void RotEsq(RBTree *t, nodo *p){
     nodo *q;
     q = p->dir;
     p->dir = q->esq;
@@ -65,7 +141,7 @@ void RotEsq(BsTree *t, nodo *p){
     p->pai = q;
 }
 
-void RotDir(BsTree *t, nodo *p){
+void RotDir(RBTree *t, nodo *p){
     nodo *q;
     q = p->esq;
     p->esq = q->dir;
@@ -81,7 +157,7 @@ void RotDir(BsTree *t, nodo *p){
     q->dir = p;
     p->pai = q;
 }
-void Insira(BsTree *t,int k){
+void Insira(RBTree *t,int k){
 
 	nodo *x = (nodo*)malloc(sizeof(nodo));
 	nodo *y, *yAnt;
@@ -109,7 +185,7 @@ void Insira(BsTree *t,int k){
 	conserte_insercao(t,x);
 }
 
-void conserte_insercao(BsTree *t,nodo *p){
+void conserte_insercao(RBTree *t,nodo *p){
     nodo *y;
     while( p->pai->cor == RED){
         if(p->pai == p->pai->pai->esq){
@@ -147,18 +223,19 @@ void conserte_insercao(BsTree *t,nodo *p){
     t->raiz->cor = BLACK;
 }
 
-void Transplante(BsTree *t,nodo *p, nodo *q){
+void Transplante(RBTree *t,nodo *p, nodo *q){
 	if( p->pai == t->nil)
 		t->raiz = q;
 	else if( p == p->pai->esq)
 		p->pai->esq = q;
 	else
 		p->pai->dir = q;
-    q->pai = p->pai;
+	if(q != t->nil)
+		q->pai = p->pai;
 
 }
 
-void Delete( BsTree *t, nodo *p){
+void Delete( RBTree *t, nodo *p){
 	nodo *y,*x;
 	y = p;
 	int cor_original_de_y = y->cor;
@@ -170,7 +247,7 @@ void Delete( BsTree *t, nodo *p){
 	    x = p->esq;
 		Transplante(t, p, p->esq);
 	}else{
-		y = Minimo(p->dir);
+		y = Minimo(t,p->dir);
         cor_original_de_y = y->cor;
         x = y->dir;
 
@@ -192,7 +269,7 @@ void Delete( BsTree *t, nodo *p){
     }
 }
 
- void conserte_delecao(BsTree *t, nodo *x){
+ void conserte_delecao(RBTree *t, nodo *x){
     nodo *w;
     while(x != t->raiz && x->cor == BLACK){
         if(x == x->pai->esq){
@@ -211,7 +288,7 @@ void Delete( BsTree *t, nodo *p){
                     w->esq->cor = BLACK;
                     w->cor = RED;
                     RotDir(t,w);
-                    w = x->pai->cor;
+                    w = x->pai->dir;
                 }
                 w->cor = x->pai->cor;
                 x->pai->cor = BLACK;
@@ -236,7 +313,7 @@ void Delete( BsTree *t, nodo *p){
                     w->dir->cor = BLACK;
                     w->cor = RED;
                     RotEsq(t,w);
-                    w = x->pai->cor;
+                    w = x->pai->esq;
                 }
                 w->cor = x->pai->cor;
                 x->pai->cor = BLACK;
@@ -249,42 +326,52 @@ void Delete( BsTree *t, nodo *p){
     }
  }
 
-nodo* SUCESSOR(nodo *x){
+nodo* SUCESSOR(RBTree *t,nodo *x){
     nodo *y;
-    if (x->dir != NULL)
-        return Minimo(x->dir);
+    if (x->dir != t->nil)
+        return Minimo(t,x->dir);
     y = x->pai;
-    while (y != NULL && x == y->dir){
+    while (y != t->nil && x == y->dir){
 		x = y;
          y = y->pai;
     }
 	return y;
 }
 
-nodo* ANTECESSOR(nodo *x){
+nodo* ANTECESSOR(RBTree *t, nodo *x){
     nodo *y;
 
-    if (x->esq != NULL)
-        return Maximo(x->esq);
+    if (x->esq != t->nil)
+        return Maximo(t,x->esq);
     y = x;
-    while (y != NULL && x == y->esq)
+    while (y != t->nil && x == y->esq)
 		x = y;
 	y = y->pai;
 	return y;
 }
 
+int nodos(RBTree *t, nodo *p){
+    if (p == t->nil)
+        return 0;
+    int nE = nodos(t , p->esq);
+    int nD = nodos(t ,p->dir);
+    return(nE + nD + 1);
+}
 
 
 int main(){
-	BsTree *t = (BsTree *)malloc(sizeof(BsTree));
+	RBTree *t = (RBTree *)malloc(sizeof(RBTree));
 	t->nil = (nodo*)malloc(sizeof(nodo));
-	t->raiz = t->nil;
+	t->raiz = (nodo*)malloc(sizeof(nodo));
+
+	t->nil->dir = t->nil->esq = t->nil->pai = NULL;
 	t->nil->cor = BLACK;
-	t->raiz->cor = BLACK;
+
+	t->raiz = t->nil;
 
 	nodo *temp;
 	char op;
-	int dado;
+	int dado, h, b , n , nivel;
 	while(1){
 		scanf("%c",&op);
 		switch (op){
@@ -295,8 +382,8 @@ int main(){
 
             case 'd':
                 scanf("%d",&dado);
-                temp = Consulta(t->raiz , dado);
-                if(temp != NULL){
+                temp = Consulta(t,t->raiz , dado);
+                if(temp != t->nil){
                     Delete(t,temp);
                 }
             break;
@@ -304,56 +391,57 @@ int main(){
             case 'D':
                 scanf("%d",&dado);
                 do{
-                 temp = Consulta(t->raiz , dado);
-                if(temp != NULL){
+                 temp = Consulta(t,t->raiz , dado);
+                if(temp != t->nil){
                     Delete(t,temp);
                 }
-                }while(temp != NULL);
+                }while(temp != t->nil);
 
             break;
 
             case 's':
                 scanf("%d",&dado);
-                temp = Consulta(t->raiz , dado);
-                if(temp != NULL){
-                    printf("%p",temp);
+                temp = Consulta(t,t->raiz , dado);
+                if(temp != t->nil){
+                    printf("%p\n",temp);
                 }
             break;
 
             case 'p':
-                ImprimaOrdenado(t->raiz);
+                ImprimaOrdenado(t,t->raiz);
+                printf("\n");
             break;
 
             case '+':
                 scanf("%d",&dado);
-                temp = Consulta(t->raiz , dado);
-                if(temp != NULL ){
-                    temp = SUCESSOR(temp);
-                    if(temp != NULL)
+                temp = Consulta(t,t->raiz , dado);
+                if(temp != t->nil && temp != t->raiz){
+                    temp = SUCESSOR(t,temp);
+                    if(temp != t->nil)
                         printf("%p\n",temp);
                 }
             break;
 
             case '-':
                 scanf("%d",&dado);
-                temp = Consulta(t->raiz , dado);
-                if(temp != NULL && temp != t->raiz){
-                    temp = ANTECESSOR(temp);
-                    if(temp != NULL)
+                temp = Consulta(t,t->raiz , dado);
+                if(temp != t->nil && temp != t->raiz){
+                    temp = ANTECESSOR(t,temp);
+                    if(temp != t->nil)
                     printf("%p\n",temp);
                 }
             break;
 
             case 'M':
-                if(t->raiz != NULL){
-                    temp = Maximo(t->raiz);
+                if(t->raiz != t->nil){
+                    temp = Maximo(t,t->raiz);
                     printf("%d\n",temp->chave);
                 }
             break;
 
             case 'm':
-                if(t->raiz != NULL){
-                    temp = Minimo(t->raiz);
+                if(t->raiz != t->nil){
+                    temp = Minimo(t,t->raiz);
                     printf("%d\n",temp->chave);
                 }
             break;
@@ -361,6 +449,32 @@ int main(){
             case 'q':
                 return 0;
             break;
+
+            case 'h':
+                h = altura(t, t->raiz);
+                printf("h = %d\n",h);
+            break;
+
+            case 'b':
+               b =  balanceada(t, t->raiz);
+               if (b == 1){
+                   printf("SIM\n");
+               }else{
+                    printf("NAO\n");
+               }
+            break;
+
+            case 'n':
+                n = nodos(t, t->raiz);
+                printf("%d nodos\n",n);
+            break;
+
+            case 'N':
+                scanf("%d",&dado);
+                nivel = nivelChave(t,t->raiz,dado,0);
+                printf("NIVEL DA CHAVE %d = %d\n",dado,nivel);
+            break;
+
         }
     }
 	return 0;
