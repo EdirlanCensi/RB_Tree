@@ -106,6 +106,10 @@ void ImprimaOrdenado(RBTree *t,nodo *p){
 	if( p != t->nil){
 		ImprimaOrdenado(t,p->esq);
 		printf("%d ",p->chave);
+		if(p->cor == BLACK)
+            printf("PRETO\n");
+        else
+            printf("VERMELHO\n");
 		ImprimaOrdenado(t,p->dir);
 	}
 }
@@ -182,7 +186,8 @@ void Insira(RBTree *t,int k){
 	else
 		yAnt->dir =x;
 	x->pai = yAnt;
-	conserte_insercao(t,x);
+
+ 	  conserte_insercao(t,x);
 }
 
 void conserte_insercao(RBTree *t,nodo *p){
@@ -196,16 +201,15 @@ void conserte_insercao(RBTree *t,nodo *p){
                 p->pai->pai->cor = RED;
                 p = p->pai->pai;
             }else{
-                if( p == p->pai->dir){
-                    p = p->pai;
-                    RotEsq(t,p);
-                }
+		if( p == p->pai->dir)
+                  p = p->pai;  RotEsq(t,p);
+
                 p->pai->cor = BLACK;
                 p->pai->pai->cor = RED;
                 RotDir(t,p->pai->pai);
             }
         }else{
-            y = p->pai->esq;
+            y = p->pai->pai->esq;
             if(y->cor == RED){
                 p->pai->cor = BLACK;
                 y->cor = BLACK;
@@ -362,9 +366,8 @@ int nodos(RBTree *t, nodo *p){
 int main(){
 	RBTree *t = (RBTree *)malloc(sizeof(RBTree));
 	t->nil = (nodo*)malloc(sizeof(nodo));
-	t->raiz = (nodo*)malloc(sizeof(nodo));
 
-	t->nil->dir = t->nil->esq = t->nil->pai = NULL;
+        t->nil->pai = t->nil->dir = t->nil->esq = NULL;
 	t->nil->cor = BLACK;
 
 	t->raiz = t->nil;
@@ -376,7 +379,7 @@ int main(){
 		scanf("%c",&op);
 		switch (op){
             case 'i':
-                scanf("%d",&dado);
+                scanf(" %d",&dado);
                 Insira(t, dado);
             break;
 
